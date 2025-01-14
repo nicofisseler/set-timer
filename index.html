@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+    <meta name="apple-mobile-web-app-title" content="3-Minute Timer" />
+    <link rel="icon" href="favicon.ico" type="image/x-icon" />
+    <title>3-Minute Countdown</title>
+    <style>
+      body {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        margin: 0;
+        font-family: Arial, sans-serif;
+        background-color: #080808;
+        color: #ffffff;
+        user-select: none;
+        font-weight: 600;
+      }
+      #timer {
+        font-size: 5rem;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="timer">03:00</div>
+
+    <script>
+      let countdownTime = 180; // 3 minutes in seconds
+      let timerInterval;
+
+      const timerDisplay = document.getElementById("timer");
+
+      function updateTimerDisplay(seconds) {
+        const minutes = Math.floor(seconds / 60);
+        const remainingSeconds = seconds % 60;
+        timerDisplay.textContent = `${minutes
+          .toString()
+          .padStart(2, "0")}:${remainingSeconds.toString().padStart(2, "0")}`;
+      }
+
+      function startTimer() {
+        if (timerInterval) clearInterval(timerInterval);
+
+        let timeLeft = countdownTime;
+        updateTimerDisplay(timeLeft);
+
+        timerInterval = setInterval(() => {
+          timeLeft--;
+          updateTimerDisplay(timeLeft);
+
+          if (timeLeft <= 0) {
+            clearInterval(timerInterval);
+            timerDisplay.textContent = "Time's Up!";
+          }
+        }, 1000);
+      }
+
+      document.body.addEventListener("click", () => {
+        startTimer();
+      });
+
+      // Initialize timer
+      startTimer();
+
+      // Register the service worker
+      if ("serviceWorker" in navigator) {
+        navigator.serviceWorker
+          .register("/service-worker.js")
+          .then(() => console.log("Service Worker Registered"))
+          .catch((err) =>
+            console.error("Service Worker Registration Failed:", err)
+          );
+      }
+    </script>
+  </body>
+</html>
