@@ -37,6 +37,10 @@
 
       const timerDisplay = document.getElementById("timer");
 
+      // Variables for double-tap detection
+      let lastTapTime = 0;
+      const doubleTapThreshold = 300; // Maximum time between taps (in ms)
+
       function updateTimerDisplay(seconds) {
         const minutes = Math.floor(seconds / 60);
         const remainingSeconds = seconds % 60;
@@ -68,9 +72,17 @@
         }, 1000);
       }
 
-      document.body.addEventListener("click", () => {
-        startTimer();
-      });
+      function handleDoubleTap() {
+        const currentTime = Date.now();
+        if (currentTime - lastTapTime <= doubleTapThreshold) {
+          // Detected double-tap, restart the timer
+          startTimer();
+        }
+        lastTapTime = currentTime;
+      }
+
+      // Listen for double-tap on the body
+      document.body.addEventListener("click", handleDoubleTap);
 
       // Initialize timer
       startTimer();
