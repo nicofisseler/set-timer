@@ -4,7 +4,10 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta
+      name="apple-mobile-web-app-status-bar-style"
+      content="black-translucent"
+    />
     <meta name="apple-mobile-web-app-title" content="3-Minute Timer" />
     <link rel="icon" href="favicon.ico" type="image/x-icon" />
     <link rel="manifest" href="manifest.json" />
@@ -18,13 +21,31 @@
         margin: 0;
         font-family: Arial, sans-serif;
         background-color: #080808;
-        color: #ffffff;
+        color: #fff;
         user-select: none;
         font-weight: 600;
       }
       #timer {
         font-size: 5rem;
         transition: color 0.3s ease;
+      }
+      /* Pulsating effect */
+      @keyframes pulse {
+        0% {
+          transform: scale(1);
+          opacity: 1;
+        }
+        50% {
+          transform: scale(1.1);
+          opacity: 0.8;
+        }
+        100% {
+          transform: scale(1);
+          opacity: 1;
+        }
+      }
+      .pulsating {
+        animation: pulse 1s infinite;
       }
     </style>
   </head>
@@ -33,13 +54,10 @@
 
     <script>
       let countdownTime = 180; // 3 minutes in seconds
+      let resetTimestamp = Date.now(); // Store the last reset timestamp
       let timerInterval;
 
       const timerDisplay = document.getElementById("timer");
-
-      // Variables for double-tap detection
-      let lastTapTime = 0;
-      const doubleTapThreshold = 300; // Maximum time between taps (in ms)
 
       function updateTimerDisplay(seconds) {
         const minutes = Math.floor(seconds / 60);
@@ -48,54 +66,57 @@
           .toString()
           .padStart(2, "0")}:${remainingSeconds.toString().padStart(2, "0")}`;
 
-        // Change color to red during the last 30 seconds
+        // Add pulsating effect and color change in the last 30 seconds
         if (seconds <= 30) {
-          timerDisplay.style.color = "#b81c1c";
+          timerDisplay.style.color = "#e33b3b";
+          timerDisplay.classList.add("pulsating");
         } else {
           timerDisplay.style.color = "#ffffff";
+          timerDisplay.classList.remove("pulsating");
         }
       }
 
+      function calculateTimeLeft() {
+        const now = Date.now();
+        const elapsed = Math.floor((now - resetTimestamp) / 1000); // Time elapsed in seconds
+        return Math.max(0, countdownTime - elapsed);
+      }
+
       function startTimer() {
+        // Clear any existing intervals
         if (timerInterval) clearInterval(timerInterval);
 
-        let timeLeft = countdownTime;
-        updateTimerDisplay(timeLeft);
-
+        // Start updating the display
         timerInterval = setInterval(() => {
-          timeLeft--;
-          updateTimerDisplay(Math.max(0, timeLeft)); // Prevent negative time
+          const timeLeft = calculateTimeLeft();
+          updateTimerDisplay(timeLeft);
 
           if (timeLeft <= 0) {
-            clearInterval(timerInterval);
+            clearInterval(timerInterval); // Stop the interval when time is up
           }
         }, 1000);
       }
 
-      function handleDoubleTap() {
+      function resetTimer() {
+        resetTimestamp = Date.now(); // Save the reset timestamp
+        startTimer();
+      }
+
+      // Improved double-tap logic
+      let lastTapTime = 0;
+      document.body.addEventListener("click", () => {
         const currentTime = Date.now();
-        if (currentTime - lastTapTime <= doubleTapThreshold) {
-          // Detected double-tap, restart the timer
-          startTimer();
+        if (currentTime - lastTapTime <= 300) {
+          // Double-tap detected, reset the timer immediately
+          resetTimer();
+          lastTapTime = 0; // Reset last tap time to avoid multiple resets
+        } else {
+          lastTapTime = currentTime; // Update last tap time
         }
-        lastTapTime = currentTime;
-      }
+      });
 
-      // Listen for double-tap on the body
-      document.body.addEventListener("click", handleDoubleTap);
-
-      // Initialize timer
-      startTimer();
-
-      // Register the service worker
-      if ("serviceWorker" in navigator) {
-        navigator.serviceWorker
-          .register("/service-worker.js")
-          .then(() => console.log("Service Worker Registered"))
-          .catch((err) =>
-            console.error("Service Worker Registration Failed:", err)
-          );
-      }
+      // Initialize the timer
+      resetTimer();
     </script>
   </body>
 </html>
