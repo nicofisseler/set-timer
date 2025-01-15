@@ -67,7 +67,7 @@
           .padStart(2, "0")}:${remainingSeconds.toString().padStart(2, "0")}`;
 
         // Add pulsating effect and color change in the last 30 seconds
-        if (seconds <= 30) {
+        if (seconds <= 30 && seconds != 0) {
           timerDisplay.style.color = "#e33b3b";
           timerDisplay.classList.add("pulsating");
         } else {
